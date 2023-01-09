@@ -1,0 +1,1338 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <conio.h>
+#include <locale.h>
+#include <windows.h>
+
+void gotoxy (short x, short y);
+
+typedef struct Data
+  {
+  	int dia;
+  	int mes;
+  	int ano;
+  } DataAniv, DataConheci;
+
+struct agenda
+  {
+  	char Nome[20];
+  	char Apelido[20];
+  	long long int CPF;
+  	char Sexo;
+  	char Endereco[30];
+  	char PrimeiroEncontro[2];
+  	int  TelResidencial;
+  	int  TelComercial;
+  	int  Celular;
+  	DataAniv Niver;
+  	DataConheci Conheci;
+  	char Relacao;
+  	char Sobre[50];
+  	int  vivo;
+  	
+  } contato;
+
+int main ()
+{
+	system ("Title Agenda Eletrônica");
+	
+	// Area das rotinas //
+	int  menu 	   ();
+	void inserir   ();
+	void consultar ();
+	void listar    ();
+	void alterar   ();	
+	void excluir   ();
+	void finalizar ();
+	
+	setlocale (LC_ALL,"portuguese");
+	
+	FILE *arquivo = fopen ("cadastro.dat", "rb");
+	
+	if (arquivo == NULL)
+	  {
+	  	printf ("=====================================\n");
+		printf ("  A G E N D A   E L E T R O N I C A  \n");
+		printf ("=====================================\n");
+		printf ("Bem Vindo, este é seu primeiro acesso, \n");
+		printf ("Por favor, insira seu primeiro contato: \n");
+		printf ("Digite uma tecla para continuar... \n");
+		getch();
+		system ("cls");
+		fclose(arquivo);
+		inserir ();
+	  }
+	else
+	  {
+	  	printf ("=====================================\n");
+		printf ("  A G E N D A   E L E T R O N I C A  \n");
+		printf ("=====================================\n");
+		printf ("Bem vindo de volta! \n");
+		printf ("Aperte qualquer tecla para continuar... \n");
+		getch();
+	  }
+	  
+	fclose(arquivo);
+	
+	int opcao;
+	
+	do
+	  {
+	  	system ("cls");
+	  	
+	  	opcao = menu();
+	  	
+		switch (opcao)
+		  {
+		  	case 1:
+		  		inserir();
+		  		break;
+		  		
+		  	case 2:
+		  		consultar();
+		  		break;
+		  		
+		  	case 3:
+		  		listar();
+		  		break;
+		  		
+		  	case 4:
+		  		alterar();
+		  		break;
+		  		
+		  	case 5:
+		  		excluir();
+		  		break;
+		  		
+		  	case 9:
+		  		finalizar();
+		  		return 0;
+		  		
+		  	default:
+		  		printf ("-------------------------------------\n");
+		  		printf ("Opcao invalida, tente novamente.\n");
+		  		printf ("Aperte qualquer tecla para continuar.");
+				getch();		
+		  }
+		  
+      } while (1);
+	
+	return 0;
+}
+
+int menu ()
+{
+	int opcao;
+	
+	printf ("=====================================\n");
+	printf ("  A G E N D A   E L E T R O N I C A  \n");
+	printf ("=====================================\n");
+	printf ("Escolha uma das opcoes abaixo: \n");
+	printf ("-------------------------------------\n");
+	printf ("[1] - Inserir contato; \n");
+	printf ("[2] - Consultar contato; \n");
+	printf ("[3] - Listar contatos; \n");
+	printf ("[4] - Alterar contato; \n");
+	printf ("[5] - Excluir contato; \n");
+	printf ("[9] - Finalizar. \n");
+	printf ("-------------------------------------\n");
+	scanf ("%d", &opcao);
+	
+	return opcao;
+}
+
+void inserir ()
+{
+	FILE *arquivo;
+	int encontrado = 1;
+	long long int CPFi;
+	char Sexoi, Relacaoi;
+	
+	int  CPFverdadeiro (long long int CPF);
+	char TesteRelacao  (char Relacao, int linha);
+	char TesteSexo     (char Sexo, int linha);
+	void TesteLocal    (char Local[2], int linha);
+	void TabelaRelacao ();
+	void TabelaLocal   ();
+	void ApagarTabela  ();
+	
+	fflush(stdin);
+	system ("cls");
+	
+	printf ("=====================================\n");
+	printf ("  A G E N D A   E L E T R O N I C A  \n");
+	printf ("=====================================\n");
+	
+	printf ("CPF: ");
+	scanf("%lld", &CPFi);
+	encontrado = CPFverdadeiro(CPFi);
+	
+	while (encontrado == 1)
+	{
+		system ("cls");
+		printf ("=====================================\n");
+		printf ("  A G E N D A   E L E T R O N I C A  \n");
+		printf ("=====================================\n");
+		printf ("CPF já existente, digite outro: ");
+		scanf("%lld", &CPFi);
+		encontrado = 0;
+		encontrado = CPFverdadeiro(CPFi);
+	}
+	contato.CPF=CPFi;
+	
+	while (getchar() != '\n');
+	
+	printf ("Nome: ");
+	gets(contato.Nome);
+	
+	printf ("Apelido: ");
+	gets(contato.Apelido);
+	
+	TabelaRelacao();
+	gotoxy(0,6);
+	
+	printf ("Relação: ");
+	scanf(" %c", &Relacaoi);
+	
+	Relacaoi = TesteRelacao (Relacaoi, 6);
+	
+	ApagarTabela ();
+	gotoxy(0, 7);
+	
+	printf ("Sexo: ");
+	scanf(" %c", &Sexoi);
+	
+	contato.Sexo = TesteSexo (Sexoi, 7);
+
+	while (getchar() != '\n');
+	
+	printf ("Endereço: ");
+	gets(contato.Endereco);
+	
+	printf ("-------------------------------------\n");
+	
+	TabelaLocal();
+	gotoxy(0, 10);
+	
+	printf ("Primeiro encontro: ");
+	gets(contato.PrimeiroEncontro);
+	
+	TesteLocal(contato.PrimeiroEncontro, 10);
+	
+	ApagarTabela();
+	gotoxy(0, 11);
+	
+	printf ("Dia que conheceu: \n");
+	
+	printf ("- Dia: ");
+	scanf ("%d", &contato.Conheci.dia);
+	
+	printf ("- Mes: ");
+	scanf ("%d", &contato.Conheci.mes);
+					
+	printf ("- Ano: ");
+	scanf ("%d", &contato.Conheci.ano);
+	
+	while (getchar() != '\n');
+	
+	printf ("-------------------------------------\n");
+	
+	printf ("Data aniversário: \n");
+	
+	printf ("- Dia: ");
+	scanf ("%d", &contato.Niver.dia);
+	
+	printf ("- Mes: ");
+	scanf ("%d", &contato.Niver.mes);
+					
+	printf ("- Ano: ");
+	scanf ("%d", &contato.Niver.ano);
+	
+	printf ("-------------------------------------\n");
+	
+	printf ("Telefone residencial: ");
+	scanf("%d", &contato.TelResidencial);
+	
+	printf ("Telefone comercial: ");
+	scanf("%d", &contato.TelComercial);
+	
+	printf ("Celular: ");
+	scanf("%d", &contato.Celular);
+	
+	printf ("-------------------------------------\n");
+	
+	while (getchar() != '\n');
+	
+	printf ("Sobre: ");
+	gets(contato.Sobre);
+	
+	contato.Relacao = Relacaoi;
+	
+	contato.vivo=1;
+	
+	arquivo = fopen ("cadastro.dat", "a+b");
+	
+	if (arquivo == NULL)
+	  {
+	  	printf ("Arquivo nao encontrado. \n");
+	  	printf ("Aperte uma tecla para continuar.");
+	  	getch();
+	  	return;
+	  }
+	  
+	fwrite (&contato, sizeof(struct agenda), 1, arquivo);
+	
+	fclose(arquivo);
+}
+
+int CPFverdadeiro(long long int CPF)
+{
+	int encontrado=0;
+	
+	FILE *arquivo = fopen ("cadastro.dat", "rb");
+	if (arquivo == NULL)
+	  {
+	  	encontrado = 0;
+	  	return encontrado;
+	  }
+	
+	rewind(arquivo);
+	
+	int k=0;
+	
+	while (k==0)
+	  {
+	  	fread (&contato, sizeof(struct agenda), 1, arquivo);
+	  	
+	  	if (feof(arquivo))
+	  	  {
+	  	  	break;
+		  }
+		  
+		if (contato.CPF == CPF)
+		  {
+		  	encontrado = 1;
+		  	k++;
+		  	break;
+		  }
+		else
+		  {
+		  	encontrado = 0;
+		  }
+	  }
+	
+	fclose(arquivo);
+	return encontrado;
+}
+
+void consultar()
+{
+	system ("cls");
+	fflush(stdin);
+	
+	int opcao;
+	
+	void consultaCPF         ();
+	void consultaNome        ();
+	void consultaAniv        ();
+	void consultaRelacao     ();
+	void relacaoaniversario  ();
+	
+	printf ("=====================================\n");
+	printf ("  A G E N D A   E L E T R O N I C A  \n");
+	printf ("=====================================\n");
+	printf ("Escolha uma das opções de consulta:  \n");
+	printf ("-------------------------------------\n");
+	printf ("[1] - CPF; \n");
+	printf ("[2] - Nome; \n");
+	printf ("[3] - Mês de Aniversário; \n");
+	printf ("[4] - Relação; \n");
+	printf ("[5] - Mês de Aniversário e Relação \n");
+	printf ("-------------------------------------\n");
+	
+	scanf ("%d", &opcao);
+	printf ("%d", opcao);
+	system ("cls");
+	
+	switch (opcao)
+	  {
+	  	case 1:
+	  		consultaCPF();
+	  		break;
+	  	
+	  	case 2:
+	  		consultaNome();
+	  		break;
+	  		
+	  	case 3:
+	  		consultaAniv();
+	  		break;
+	  		
+	  	case 4:
+	  		consultaRelacao();
+	  		break;
+	  		
+	  	case 5:
+	  		relacaoaniversario();
+	  		break;
+	  		
+	  	default:
+	  		printf ("-------------------------------------\n");
+	  		printf ("Opção inválida, aperte uma tecla para sair...");
+	  		getch();
+
+	  }
+	  
+	return;
+}
+
+//Rotinas de Consulta
+
+void consultaCPF()
+{
+	FILE *arquivo = fopen ("cadastro.dat", "rb");
+	
+	fseek(arquivo, SEEK_SET, 0);
+	
+	long long int codigo;
+	int encontrado = 0;
+	
+	system ("cls");
+
+	printf ("=====================================\n");
+	printf ("  A G E N D A   E L E T R O N I C A  \n");
+	printf ("=====================================\n");
+	printf ("Digite o CPF: ");
+	scanf  ("%lld", &codigo);
+	printf ("-------------------------------------\n");	
+
+	while (1)
+	  {
+	  	fread (&contato, sizeof(struct agenda), 1, arquivo);
+	  	
+		if (feof(arquivo))
+	  	  {
+	  	  	break;
+		  }
+		
+		if (codigo == contato.CPF && contato.vivo == 1)
+		  {
+		  	printf ("CPF: %lld \n", contato.CPF);
+		  	printf ("Nome: %s\n", contato.Nome);
+			printf ("Apelido: %s\n", contato.Apelido);
+			printf ("Relação: %c\n", contato.Relacao);
+			printf ("Sexo: %c\n", contato.Sexo);
+			printf ("Endereço: %s\n", contato.Endereco);
+			printf ("Primeiro encontro: %s\n", contato.PrimeiroEncontro);
+			printf ("Dia que conheceu: %d/%d/%d\n", contato.Conheci.dia, contato.Conheci.mes, contato.Conheci.ano);	
+			printf ("Aniversário: %d/%d/%d\n", contato.Niver.dia, contato.Niver.mes, contato.Niver.ano);
+			printf ("-------------------------------------\n");
+			printf ("Telefones: \n");
+			printf ("-------------------------------------\n");
+			printf ("- Residencial: %d\n", contato.TelResidencial);
+			printf ("- Comercial: %d\n", contato.TelComercial);
+			printf ("- Celular: %d\n", contato.Celular);
+			printf ("-------------------------------------\n");
+			printf ("Sobre: %s\n", contato.Sobre);
+			printf ("-------------------------------------\n");
+			
+			encontrado = 1;
+		  }
+	  }
+	  
+	if (!encontrado)
+	  {
+	  	printf ("CPF não encontrado, tente novamente. \n");
+	  	printf ("Aperte uma tecla para sair...");
+	  	getch();
+	  }
+	else
+	  {
+	  	printf ("Aperte uma tecla para sair...");
+		getch();
+	  }
+	  
+	fclose(arquivo);
+}
+	  
+void consultaNome()
+{
+	FILE *arquivo = fopen ("cadastro.dat", "rb");
+	
+	fseek(arquivo, SEEK_SET, 0);
+	
+	char codigo[20];
+	int encontrado = 0;
+	
+	system ("cls");
+
+	printf ("=====================================\n");
+	printf ("  A G E N D A   E L E T R O N I C A  \n");
+	printf ("=====================================\n");
+	printf ("Digite o Nome: ");
+	while (getchar() != '\n');
+	gets(codigo);
+	printf ("-------------------------------------\n");	
+
+	while (1)
+	  {
+	  	fread (&contato, sizeof(struct agenda), 1, arquivo);
+	  	
+		if (feof(arquivo))
+	  	  {
+
+	  	  	break;
+		  }
+		
+		if (!strcmp(codigo, contato.Nome) && contato.vivo == 1)
+		  {
+		  	system("cls");
+		  	printf ("=====================================\n");
+			printf ("  A G E N D A   E L E T R O N I C A  \n");
+			printf ("=====================================\n");
+		  	printf ("CPF: %lld \n", contato.CPF);
+		  	printf ("Nome: %s\n", contato.Nome);
+			printf ("Apelido: %s\n", contato.Apelido);
+			printf ("Relação: %c\n", contato.Relacao);
+			printf ("Sexo: %c\n", contato.Sexo);
+			printf ("Endereço: %s\n", contato.Endereco);
+			printf ("Primeiro encontro: %s\n", contato.PrimeiroEncontro);
+			printf ("Dia que conheceu: %d/%d/%d\n", contato.Conheci.dia, contato.Conheci.mes, contato.Conheci.ano);	
+			printf ("Aniversário: %d/%d/%d\n", contato.Niver.dia, contato.Niver.mes, contato.Niver.ano);
+			printf ("-------------------------------------\n");
+			printf ("Telefones: \n");
+			printf ("-------------------------------------\n");
+			printf ("- Residencial: %d\n", contato.TelResidencial);
+			printf ("- Comercial: %d\n", contato.TelComercial);
+			printf ("- Celular: %d\n", contato.Celular);
+			printf ("-------------------------------------\n");
+			printf ("Sobre: %s\n", contato.Sobre);
+			printf ("-------------------------------------\n");
+			printf ("Digite uma tecla para continuar...");
+			getch();
+			
+			encontrado = 1;
+
+		  }
+	  }
+	  
+	if (!encontrado)
+	  {
+	  	printf ("Nome não encontrado, tente novamente. \n");
+	  	printf ("Aperte uma tecla para sair...");
+	  	getch();
+	  }
+	
+	fclose(arquivo);
+} 
+
+void consultaAniv()
+{
+	FILE *arquivo = fopen ("cadastro.dat", "rb");
+	
+	fseek(arquivo, SEEK_SET, 0);
+	
+	int codigo;
+	int encontrado = 0;
+	
+	system ("cls");
+
+	printf ("=====================================\n");
+	printf ("  A G E N D A   E L E T R O N I C A  \n");
+	printf ("=====================================\n");
+	printf ("Digite o mês do aniversário: ");
+	scanf  ("%d", &codigo);
+	printf ("-------------------------------------\n");	
+
+	while (1)
+	  {
+	  	fread (&contato, sizeof(struct agenda), 1, arquivo);
+	  	
+		if (feof(arquivo))
+	  	  {
+	  	  	break;
+		  }
+		
+		if (codigo == contato.Niver.mes && contato.vivo == 1)
+		  {
+		  	system ("cls");
+		  	printf ("=====================================\n");
+			printf ("  A G E N D A   E L E T R O N I C A  \n");
+			printf ("=====================================\n");
+		  	printf ("CPF: %lld \n", contato.CPF);
+		  	printf ("Nome: %s\n", contato.Nome);
+			printf ("Apelido: %s\n", contato.Apelido);
+			printf ("Relação: %c\n", contato.Relacao);
+			printf ("Sexo: %c\n", contato.Sexo);
+			printf ("Endereço: %s\n", contato.Endereco);
+			printf ("Primeiro encontro: %s\n", contato.PrimeiroEncontro);
+			printf ("Dia que conheceu: %d/%d/%d\n", contato.Conheci.dia, contato.Conheci.mes, contato.Conheci.ano);	
+			printf ("Aniversário: %d/%d/%d\n", contato.Niver.dia, contato.Niver.mes, contato.Niver.ano);
+			printf ("-------------------------------------\n");
+			printf ("Telefones: \n");
+			printf ("-------------------------------------\n");
+			printf ("- Residencial: %d\n", contato.TelResidencial);
+			printf ("- Comercial: %d\n", contato.TelComercial);
+			printf ("- Celular: %d\n", contato.Celular);
+			printf ("-------------------------------------\n");
+			printf ("Sobre: %s\n", contato.Sobre);
+			printf ("-------------------------------------\n");
+			printf ("Digite uma tecla para continuar...");
+			getch();
+			
+			encontrado = 1;
+			
+		  }
+	  }
+	
+	if (!encontrado)
+	  {
+	  	printf ("Aniversariante não encontrada, tente novamente. \n");
+	  	printf ("Aperte uma tecla para sair...");
+	  	getch();
+	  }
+	  
+	fclose(arquivo);
+ }
+
+void consultaRelacao()
+{
+	void TabelaRelacao();
+	void ApagarTabela();
+	char TesteRelacao  (char Relacao, int linha);
+	
+	FILE *arquivo = fopen ("cadastro.dat", "rb");
+	
+	fseek(arquivo, SEEK_SET, 0);
+	
+	char codigo, codigo2;
+	int encontrado = 0;
+	
+	system ("cls");
+	
+	TabelaRelacao();
+	gotoxy(0, 0);
+
+	printf ("=====================================\n");
+	printf ("  A G E N D A   E L E T R O N I C A  \n");
+	printf ("=====================================\n");
+	printf ("Digite a relação: ");
+	while (getchar() != '\n');
+	scanf ("%c", &codigo);
+	
+	codigo2 = TesteRelacao(codigo, 3);
+	printf ("-------------------------------------\n");
+	ApagarTabela();
+	gotoxy(0, 5);
+	
+	while (1)
+	  {
+	  	fread (&contato, sizeof(struct agenda), 1, arquivo);
+	  	
+		if (feof(arquivo))
+	  	  {
+	  	  	break;
+		  }
+		
+		if (codigo2 == contato.Relacao && contato.vivo == 1)
+		  {
+		  	system ("cls");
+		  	printf ("=====================================\n");
+			printf ("  A G E N D A   E L E T R O N I C A  \n");
+			printf ("=====================================\n");
+		  	printf ("CPF: %lld \n", contato.CPF);
+		  	printf ("Nome: %s\n", contato.Nome);
+			printf ("Apelido: %s\n", contato.Apelido);
+			printf ("Relação: %c\n", contato.Relacao);
+			printf ("Sexo: %c\n", contato.Sexo);
+			printf ("Endereço: %s\n", contato.Endereco);
+			printf ("Primeiro encontro: %s\n", contato.PrimeiroEncontro);
+			printf ("Dia que conheceu: %d/%d/%d\n", contato.Conheci.dia, contato.Conheci.mes, contato.Conheci.ano);	
+			printf ("Aniversário: %d/%d/%d\n", contato.Niver.dia, contato.Niver.mes, contato.Niver.ano);
+			printf ("-------------------------------------\n");
+			printf ("Telefones: \n");
+			printf ("-------------------------------------\n");
+			printf ("- Residencial: %d\n", contato.TelResidencial);
+			printf ("- Comercial: %d\n", contato.TelComercial);
+			printf ("- Celular: %d\n", contato.Celular);
+			printf ("-------------------------------------\n");
+			printf ("Sobre: %s\n", contato.Sobre);
+			printf ("-------------------------------------\n");
+			printf ("Digite uma tecla para continuar...");
+			getch();
+			
+			encontrado = 1;
+
+		  }
+	  }
+	  
+	if (!encontrado)
+	  {
+	  	printf ("Relação não encontrada, tente novamente. \n");
+	  	printf ("Aperte uma tecla para sair...");
+	  	getch();
+	  }
+	
+	fclose(arquivo);
+} 
+
+void relacaoaniversario()
+{
+	void TabelaRelacao();
+	void ApagarTabela();
+	char TesteRelacao  (char Relacao, int linha);
+	
+	FILE *arquivo = fopen ("cadastro.dat", "rb");
+	
+	fseek(arquivo, SEEK_SET, 0);
+	
+	char codigo1, codigo3;
+	int  codigo2;
+	int  encontrado = 0;
+	
+	system ("cls");
+	
+	TabelaRelacao();
+	gotoxy(0, 0);
+
+	printf ("=====================================\n");
+	printf ("  A G E N D A   E L E T R O N I C A  \n");
+	printf ("=====================================\n");
+	printf ("Digite a relação: ");
+	while (getchar() != '\n');
+	scanf ("%c", &codigo1);
+	
+	codigo3 = TesteRelacao( codigo1, 3);
+	ApagarTabela();
+	gotoxy(0, 4);
+	
+	printf ("Digite o mês do aniversário: ");
+	scanf ("%d", &codigo2);
+	
+	printf ("-------------------------------------\n");	
+
+	while (1)
+	  {
+	  	fread (&contato, sizeof(struct agenda), 1, arquivo);
+	  	
+		if (feof(arquivo))
+	  	  {
+	  	  	break;
+		  }
+		
+		if (((codigo3 == contato.Relacao) && (codigo2 == contato.Niver.mes)) && contato.vivo == 1 )
+		  {
+		  	system ("cls");
+		  	printf ("=====================================\n");
+			printf ("  A G E N D A   E L E T R O N I C A  \n");
+			printf ("=====================================\n");
+		  	printf ("CPF: %lld \n", contato.CPF);
+		  	printf ("Nome: %s\n", contato.Nome);
+			printf ("Apelido: %s\n", contato.Apelido);
+			printf ("Relação: %c\n", contato.Relacao);
+			printf ("Sexo: %c\n", contato.Sexo);
+			printf ("Endereço: %s\n", contato.Endereco);
+			printf ("Primeiro encontro: %s\n", contato.PrimeiroEncontro);
+			printf ("Dia que conheceu: %d/%d/%d\n", contato.Conheci.dia, contato.Conheci.mes, contato.Conheci.ano);	
+			printf ("Aniversário: %d/%d/%d\n", contato.Niver.dia, contato.Niver.mes, contato.Niver.ano);
+			printf ("-------------------------------------\n");
+			printf ("Telefones: \n");
+			printf ("-------------------------------------\n");
+			printf ("- Residencial: %d\n", contato.TelResidencial);
+			printf ("- Comercial: %d\n", contato.TelComercial);
+			printf ("- Celular: %d\n", contato.Celular);
+			printf ("-------------------------------------\n");
+			printf ("Sobre: %s\n", contato.Sobre);
+			printf ("-------------------------------------\n");
+			printf ("Digite uma tecla para continuar...");
+			getch();
+			
+			encontrado = 1;
+
+		  }
+	  }
+	  
+	if (!encontrado)
+	  {
+	  	printf ("Contato não encontrado, tente novamente. \n");
+	  	printf ("Aperte uma tecla para sair...");
+	  	getch();
+	  }
+	
+	fclose(arquivo);
+} 
+
+
+void listar()
+{
+	system ("cls");
+
+	FILE *arquivo = fopen ("cadastro.dat", "rb");
+	fseek(arquivo, SEEK_SET, 0);
+	
+	while (1)
+	  {	
+	  	fread (&contato, sizeof(struct agenda), 1, arquivo);
+	  	
+	  	if (feof(arquivo))
+		  {
+		  	break;
+		  }
+	  	else if(contato.vivo == 1)	
+		    {	  
+     		   printf ("=====================================\n");
+	     	   printf ("  A G E N D A   E L E T R O N I C A  \n");
+		       printf ("=====================================\n");
+		
+               printf ("CPF: %lld\n", contato.CPF);
+	  	       printf ("Nome: %s\n", contato.Nome);
+		       printf ("Apelido: %s\n", contato.Apelido);
+	     	   printf ("Relação: %c\n", contato.Relacao);
+		       printf ("Sexo: %c\n", contato.Sexo);
+		       printf ("Endereço: %s\n", contato.Endereco);
+		       printf ("Primeiro encontro: %s\n", contato.PrimeiroEncontro);
+		       printf ("Dia que conheceu: %d/%d/%d \n", contato.Conheci.dia, contato.Conheci.mes, contato.Conheci.ano);
+		       printf ("Aniversário: %d/%d/%d \n", contato.Niver.dia, contato.Niver.mes, contato.Niver.ano);
+		       printf ("-------------------------------------\n");
+		       printf ("Telefones: \n");
+		       printf ("-------------------------------------\n");
+		       printf ("- Residencial: %d\n", contato.TelResidencial);
+		       printf ("- Comercial: %d\n", contato.TelComercial);
+		       printf ("- Celular: %d\n", contato.Celular);
+		       printf ("-------------------------------------\n");
+		       printf ("Sobre: %s\n", contato.Sobre);
+		       printf ("-------------------------------------\n");
+		       printf ("Aperte uma tecla para o próximo...");
+		       getch();
+		       system("cls");
+	        }
+	    }
+     
+	fclose(arquivo);
+}
+
+void alterar()
+{	
+	void TabelaLocal();
+	void TabelaRelacao();
+	void ApagarTabela();
+	char TesteRelacao  (char Relacao, int linha);
+	char TesteSexo     (char Sexo, int linha);
+	void TesteLocal    (char Local[], int linha);
+	
+	FILE *arquivo = fopen ("cadastro.dat", "r+b");
+	fseek(arquivo, 0, SEEK_SET); 
+	
+	long long int codigo;
+	int encontrado = 0;
+	int opcao, opcaotelefone;
+	int posicao=0;
+	char Relacaoi, Sexoi;
+	
+	system ("cls");
+
+	printf ("=====================================\n");
+	printf ("  A G E N D A   E L E T R O N I C A  \n");
+	printf ("=====================================\n");
+	printf ("Digite o CPF: ");
+	scanf  ("%lld", &codigo);
+	
+
+	while (1)
+	  {		
+	  	fread (&contato, sizeof(struct agenda), 1, arquivo);
+	  	posicao++;
+	  	
+		if (feof(arquivo))
+	  	  {
+	  	  	break;
+		  }
+		
+		if (codigo == contato.CPF && contato.vivo == 1)
+		  {
+		  	encontrado = 1;
+		  	
+		  	system ("cls");
+		  	printf ("=====================================\n");
+			printf ("  A G E N D A   E L E T R O N I C A  \n");
+			printf ("=====================================\n");
+			printf ("CPF: %lld \n", codigo);
+		  	printf ("Nome: %s \n", contato.Nome);
+			printf ("-------------------------------------\n");	
+		  	
+		  	printf ("Escolha o item que deseja alterar: \n");
+		  	printf ("[1] - Apelido; \n");
+		  	printf ("[2] - Sexo; \n");
+		  	printf ("[3] - Endereço; \n");
+		  	printf ("[4] - Telefones; \n");
+		  	printf ("[5] - Aniversário; \n");
+		  	printf ("[6] - Primeiro encontro; \n");
+		  	printf ("[7] - Data que conheceu; \n");
+		  	printf ("[8] - Relação; \n");
+		  	printf ("[9] - Sobre; \n");
+		  	printf ("[0] - Cancelar. \n");
+		  	printf ("-------------------------------------\n");	
+		  	
+		  	scanf ("%d", &opcao);
+			
+			fseek(arquivo, sizeof(struct agenda)*(posicao - 1), SEEK_SET);
+			
+			switch (opcao)
+			  {
+			  	case 1:
+			  		printf ("Digite o apelido: ");
+			  		while (getchar() != '\n');
+			  		gets(contato.Apelido);
+			  		getch();
+			  		fwrite (&contato, sizeof(struct agenda), 1, arquivo);
+			  		fclose(arquivo);
+			  		break;
+			  		
+			  	case 2:
+			  		printf ("Digite o novo sexo: ");
+			  		while (getchar() != '\n');
+			  		scanf ("%c", &Sexoi);
+			  		contato.Sexo = TesteSexo(Sexoi, 19);
+			  		getch();
+			  		fwrite (&contato, sizeof(struct agenda), 1, arquivo);
+			  		fclose(arquivo);
+			  		break;
+			  		
+			  	case 3:
+			  		printf ("Digite o endereço: ");
+			  		while (getchar() != '\n');
+			  		gets(contato.Endereco);
+			  		getch();
+			  		fwrite (&contato, sizeof(struct agenda), 1, arquivo);
+			  		fclose(arquivo);
+			  		break;
+			  		
+			  	case 4:
+			  		printf ("Qual telefone deseja mudar? \n");
+			  		printf ("-------------------------------------\n");
+			  		printf ("[1] - Residêncial; \n");
+			  		printf ("[2] - Comercial; \n");
+			  		printf ("[3] - Celular. \n");
+			  		printf ("-------------------------------------\n");
+			  		
+			  		scanf ("%d", &opcaotelefone);
+			  		printf ("Digite o telefone: ");
+			  		
+			  		switch(opcaotelefone)
+			  		  {
+			  		  	case 1:
+			  		  		
+			  				while (getchar() != '\n');
+			  				scanf ("%d", &contato.TelResidencial);
+			  				getch();
+			  				fwrite (&contato, sizeof(struct agenda), 1, arquivo);
+			  				fclose(arquivo);
+			  				break;
+			  				
+			  		  	case 2:
+			  				while (getchar() != '\n');
+			  				scanf ("%d", &contato.TelComercial);
+			  				getch();
+			  				fwrite (&contato, sizeof(struct agenda), 1, arquivo);
+			  				fclose(arquivo);
+			  				break;
+			  		  	case 3:
+			  				while (getchar() != '\n');
+			  				scanf ("%d", &contato.Celular);
+			  				getch();
+			  				fwrite (&contato, sizeof(struct agenda), 1, arquivo);
+			  				fclose(arquivo);
+			  				break;
+					  }
+					  
+			  		break;
+			  			
+			  	case 5:
+			  		printf ("Digite a data: \n");
+			  		printf ("- Dia: ");
+			  		scanf ("%d", &contato.Niver.dia);
+			  		printf ("- Mês: ");
+			  		scanf ("%d", &contato.Niver.mes);
+			  		printf ("- Ano: ");
+			  		scanf ("%d", &contato.Niver.ano);
+			  		fwrite (&contato, sizeof(struct agenda), 1, arquivo);
+			  		fclose(arquivo);
+			  		break;
+			  		
+			  	case 6:
+			  		TabelaLocal();
+			  		gotoxy(0, 18);
+			  		printf ("Digite o local do Primeiro encontro: ");
+			  		while (getchar() != '\n');
+			  		gets(contato.PrimeiroEncontro);
+			  		TesteLocal(contato.PrimeiroEncontro, 18);
+			  		ApagarTabela();
+			  		getch();
+			  		fwrite (&contato, sizeof(struct agenda), 1, arquivo);
+			  		fclose(arquivo);
+			  		break;
+			  		
+			  	case 7:
+			  		printf ("Digite a data: \n");
+			  		printf ("- Dia: ");
+			  		scanf ("%d", &contato.Conheci.dia);
+			  		printf ("- Mês: ");
+			  		scanf ("%d", &contato.Conheci.mes);
+			  		printf ("- Ano: ");
+			  		scanf ("%d", &contato.Conheci.ano);
+			  		fwrite (&contato, sizeof(struct agenda), 1, arquivo);
+			  		fclose(arquivo);
+			  		break;
+			  		
+			  	case 8:
+			  		TabelaRelacao();
+			  		gotoxy(0, 18);
+					printf ("Digite a relação: ");
+			  		while (getchar() != '\n');
+			  		scanf ("%c", &Relacaoi);
+			  		contato.Relacao = TesteRelacao(Relacaoi, 18);
+			  		ApagarTabela();
+			  		getch();
+			  		fwrite (&contato, sizeof(struct agenda), 1, arquivo);
+			  		fclose(arquivo);
+			  		break;		  		
+			  		
+			  	case 9:
+			  		printf ("Digite sobre: ");
+			  		while (getchar() != '\n');
+			  		gets(contato.Sobre);
+			  		getch();
+			  		fwrite (&contato, sizeof(struct agenda), 1, arquivo);
+			  		fclose(arquivo);
+			  		break;	
+			  		
+			  	case 0: 
+			  		printf ("Saindo...");
+			  		
+			  		getch();
+			  		fclose(arquivo);
+			  		return;
+
+			  	default:
+			  		printf ("-------------------------------------\n");
+			  		printf ("Opcao invalida, tente novamente.\n");
+			  		printf ("Aperte qualquer tecla para continuar.");
+					getch();
+					system ("cls");		
+			  }
+			  
+			break;
+		  }
+	  }
+	  
+	if (!encontrado)
+	  {
+	  	printf ("-------------------------------------\n");	
+	  	printf ("Contato não encontrado, tente novamente. \n");
+	  	printf ("Aperte uma tecla para sair.");
+	  	getch();
+	  }
+	
+	fclose(arquivo);
+}
+
+void excluir   ()
+{
+	FILE *arquivo = fopen ("cadastro.dat", "r+b");
+	fseek(arquivo, 0, SEEK_SET); 
+	
+	long long int codigo;
+	int encontrado = 0;
+	char conf;
+	
+	int posicao=0;
+	
+	system ("cls");
+
+	printf ("=====================================\n");
+	printf ("  A G E N D A   E L E T R O N I C A  \n");
+	printf ("=====================================\n");
+	printf ("Cancelamento!\n");
+	printf ("Digite o CPF que deseja cancelar: ");
+	scanf  ("%lld", &codigo);
+	
+
+	while (1)
+	  {		
+	  	fread (&contato, sizeof(struct agenda), 1, arquivo);
+	  	posicao++;
+	  	
+		if (feof(arquivo))
+	  	  {
+	  	  	break;
+		  }
+		
+		if (codigo == contato.CPF && contato.vivo == 1)
+		  {
+		  	encontrado = 1;
+		  	
+		  	system ("cls");
+		  	printf ("=====================================\n");
+			printf ("  A G E N D A   E L E T R O N I C A  \n");
+			printf ("=====================================\n");
+			printf ("CPF: %lld \n", codigo);
+		  	printf ("Nome: %s \n", contato.Nome);
+			printf ("-------------------------------------\n");	
+			printf ("Confirmar cancelamento [S/N]? ");
+			conf=getche();
+		  	
+			if ((conf=='s')||(conf=='S'))
+			  {
+				fseek(arquivo, sizeof(struct agenda)*(posicao - 1), SEEK_SET);
+			
+			
+				contato.vivo=0;
+				fwrite (&contato, sizeof(struct agenda), 1, arquivo);
+				fclose(arquivo);
+				printf ("\nContato excluido!");
+				getch();
+				break;
+			  }  
+			
+			else
+			  {
+				printf ("\nVoltando ao menu...");
+				getch();
+				break;
+			  }
+			
+		  }
+	  }
+	  
+	if (!encontrado)
+	  {
+	  	printf ("-------------------------------------\n");	
+	  	printf ("Contato não encontrado, tente novamente. \n");
+	  	printf ("Aperte uma tecla para sair.");
+	  	getch();
+	  }
+
+	fclose(arquivo);
+	
+	FILE *Narquivo = fopen ("Ncadastro.dat", "a+b");
+	arquivo = fopen ("cadastro.dat", "r+b");
+	
+	while (1)
+	  {
+	  	fread (&contato, sizeof(struct agenda), 1, arquivo);
+	  	
+		if (feof(arquivo))
+	  	  {
+	  	  	break;
+		  }
+		
+		if (contato.vivo == 1)
+		  {
+		  	fwrite (&contato, sizeof(struct agenda), 1, Narquivo);
+		  }
+	  }
+	
+	fclose (arquivo);
+	fclose (Narquivo);
+	
+	remove ("cadastro.dat");
+	rename ("Ncadastro.dat","cadastro.dat");
+	system ("cls");
+	
+}
+
+void finalizar ()
+{	
+	system ("cls");
+	
+	
+//	fclose(arquivo);
+	
+	FILE *arquivo = fopen ("cadastro.dat", "r+b");
+	fseek(arquivo, 0, SEEK_SET); 
+	
+	FILE *Narquivo = fopen ("Ncadastro.dat", "a+b");
+	arquivo = fopen ("cadastro.dat", "r+b");
+	
+	while (1)
+	  {
+	  	fread (&contato, sizeof(struct agenda), 1, arquivo);
+	  	
+		if (feof(arquivo))
+	  	  {
+	  	  	break;
+		  }
+		
+		if (contato.vivo == 1)
+		  {
+		  	fwrite (&contato, sizeof(struct agenda), 1, Narquivo);
+		  }
+	  }
+	
+	fclose (arquivo);
+	fclose (Narquivo);
+	
+	remove ("cadastro.dat");
+	rename ("Ncadastro.dat","cadastro.dat");
+	
+	printf ("=====================================\n");
+	printf ("  A G E N D A   E L E T R O N I C A  \n");
+	printf ("=====================================\n");
+	printf ("Programa Terminado!!!");
+}
+
+//Rotinas de Tabelas
+
+void TabelaRelacao()
+{
+	
+	short x, y;
+	
+	gotoxy (40, 0);
+	printf ("==================\n");
+	gotoxy (40, 1);
+	printf ("Opções de Relação: \n");
+	gotoxy (40, 2);
+	printf ("------------------\n");
+	gotoxy (40, 3);
+	printf ("[A] - Amigo; \n");
+	gotoxy (40, 4);
+	printf ("[P] - Parente; \n");
+	gotoxy (40, 5);
+	printf ("[C] - Comercial; \n");
+	gotoxy (40, 6);
+	printf ("[T] - Trabalho; \n");
+	gotoxy (40, 7);
+	printf ("==================\n");
+	
+}
+
+void TabelaLocal()
+{
+	short x, y;
+	
+	gotoxy (40, 0);
+	printf ("==================\n");
+	gotoxy (40, 1);
+	printf ("Opções de Local: \n");
+	gotoxy (40, 2);
+	printf ("------------------\n");
+	gotoxy (40, 3);
+	printf ("[EB] - Ensino Básico; \n");
+	gotoxy (40, 4);
+	printf ("[EM] - Ensino Médio; \n");
+	gotoxy (40, 5);
+	printf ("[FA] - Faculdade; \n");
+	gotoxy (40, 6);
+	printf ("[LT] - Local de Trabalho; \n");
+	gotoxy (40, 7);
+	printf ("==================\n");
+	
+}
+
+void ApagarTabela()
+{
+	for (short i = 0; i <= 7; i++)
+	  {
+	  	gotoxy (40, i);
+	  	printf ("                            ");
+	  }
+}
+
+void gotoxy(short x, short y)
+{
+	COORD pos = {x, y};
+	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
+}
+
+//Rotinas de Teste
+
+char TesteRelacao(char Relacao, int linha)
+{	
+	while (!((Relacao=='A')||(Relacao=='P')||(Relacao=='C')||(Relacao=='T')
+	       ||(Relacao=='a')||(Relacao=='p')||(Relacao=='c')||(Relacao=='t')))
+	  {
+		gotoxy(0, linha);
+		printf ("Opcao de relação inválida... \n ");
+		getch();
+		gotoxy(0, linha);
+		printf ("                                ");
+		gotoxy(0, linha);
+		printf ("Relação: ");
+		while (getchar() != '\n');
+		scanf("%c", &Relacao);
+  	  }
+  	  
+  	if (Relacao == 'a')
+  	  Relacao = 'A';
+  	    
+  	if (Relacao == 'p')
+  	  Relacao = 'P';
+  	    
+    if (Relacao == 'c')
+  	  Relacao = 'C';
+  	    
+  	if (Relacao == 't')
+  	  Relacao = 'T';
+  	  
+  	  return Relacao;
+}
+
+char TesteSexo(char Sexo, int linha)
+{
+	while (!((Sexo=='m')||(Sexo=='M')||(Sexo=='f')||(Sexo=='F')))
+	  {
+		gotoxy(0, linha);
+		printf ("Opcao de sexo inválida... \n ");
+		getch();
+		gotoxy(0, linha);
+		printf ("                             ");
+		gotoxy(0, linha);
+		while (getchar() != '\n');
+		printf ("Sexo: ");
+		scanf("%c", &Sexo);
+	  }
+	
+	if (Sexo=='m')
+	Sexo='M';
+	
+	if (Sexo=='f')
+	Sexo='F';
+	
+	return Sexo;
+}
+
+void TesteLocal(char Local[2], int linha)
+{
+	char teste[2];
+	strcpy (teste,strupr(Local));
+	printf ("%s", teste);
+	
+	while (!((!strcmp(teste, "EB"))||(!strcmp(teste, "EM"))
+		   ||(!strcmp(teste, "FA"))||(!strcmp(teste, "LT"))))
+	  {  
+		gotoxy(0, linha);
+		printf ("Opcao de local inválida...              \n ");
+		getch();
+		gotoxy(0, linha);
+		printf ("                             ");
+		gotoxy(0, linha);
+		printf ("Local: ");
+		gets(Local);
+		strcpy (teste, strupr(Local));
+		printf ("%s", teste);
+	  }	
+	  
+	if (!strcmp(Local, "eb"))
+	  strcpy(Local, "EB");
+	    
+	if (!strcmp(Local, "em"))
+	  strcpy(Local, "EM");
+	    
+	if (!strcmp(Local, "fa"))
+	  strcpy(Local, "FA");
+	    
+	if (!strcmp(Local, "lt"))
+	  strcpy(Local, "LT");
+}
